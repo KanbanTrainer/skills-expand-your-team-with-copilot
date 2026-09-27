@@ -51,13 +51,22 @@ document.addEventListener("DOMContentLoaded", () => {
   function applyTheme(theme) {
     const isDarkTheme = theme === "dark";
     document.body.dataset.theme = isDarkTheme ? "dark" : "light";
-    themeToggle.setAttribute("aria-pressed", String(isDarkTheme));
-    themeToggleIcon.textContent = isDarkTheme ? "☀️" : "🌙";
-    themeToggleLabel.textContent = isDarkTheme ? "Light mode" : "Dark mode";
-    themeToggle.setAttribute(
-      "aria-label",
-      isDarkTheme ? "Switch to light mode" : "Switch to dark mode"
-    );
+
+    if (themeToggle) {
+      themeToggle.setAttribute("aria-pressed", String(isDarkTheme));
+      themeToggle.setAttribute(
+        "aria-label",
+        isDarkTheme ? "Switch to light mode" : "Switch to dark mode"
+      );
+    }
+
+    if (themeToggleIcon) {
+      themeToggleIcon.textContent = isDarkTheme ? "☀️" : "🌙";
+    }
+
+    if (themeToggleLabel) {
+      themeToggleLabel.textContent = isDarkTheme ? "Light mode" : "Dark mode";
+    }
   }
 
   function getStoredTheme() {
@@ -282,12 +291,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Event listeners for authentication
-  themeToggle.addEventListener("click", () => {
-    const nextTheme =
-      document.body.dataset.theme === "dark" ? "light" : "dark";
-    applyTheme(nextTheme);
-    saveTheme(nextTheme);
-  });
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const nextTheme =
+        document.body.dataset.theme === "dark" ? "light" : "dark";
+      applyTheme(nextTheme);
+      saveTheme(nextTheme);
+    });
+  }
   loginButton.addEventListener("click", openLoginModal);
   logoutButton.addEventListener("click", logout);
   closeLoginModal.addEventListener("click", closeLoginModalHandler);
