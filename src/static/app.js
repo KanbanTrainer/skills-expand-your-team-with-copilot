@@ -118,8 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
     helperTextArea.style.left = "-9999px";
     document.body.appendChild(helperTextArea);
     helperTextArea.select();
-    document.execCommand("copy");
+    const copied = document.execCommand("copy");
     document.body.removeChild(helperTextArea);
+
+    if (!copied) {
+      throw new Error("Copy command was unsuccessful");
+    }
   }
 
   async function shareActivity(name, details) {
@@ -165,9 +169,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     hasFocusedSharedActivity = true;
-    sharedCard.tabIndex = -1;
     sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
-    sharedCard.focus({ preventScroll: true });
+
+    const focusTarget = sharedCard.querySelector(
+      ".copy-share-button, .native-share-button, .share-link-button, .register-button"
+    );
+
+    focusTarget?.focus({ preventScroll: true });
   }
 
   // Function to set time range filter
@@ -620,11 +628,15 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="share-actions" role="group" aria-label="Share ${name}">
         ${
           navigator.share
-            ? '<button type="button" class="share-button native-share-button">Share</button>'
+            ? `<button type="button" class="share-button native-share-button" aria-label="Share ${name} using your device">
+                Share
+              </button>`
             : ""
         }
-        <button type="button" class="share-button copy-share-button">Copy Link</button>
-        <a class="share-button share-link-button" href="mailto:?subject=${emailSubject}&body=${emailBody}">
+        <button type="button" class="share-button copy-share-button" aria-label="Copy a share link for ${name}">
+          Copy Link
+        </button>
+        <a class="share-button share-link-button" aria-label="Email ${name} to a friend" href="mailto:?subject=${emailSubject}&body=${emailBody}">
           Email
         </a>
       </div>
