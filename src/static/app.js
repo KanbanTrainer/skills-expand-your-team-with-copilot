@@ -76,6 +76,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeDifficultyFilter) {
       currentDifficulty = activeDifficultyFilter.dataset.difficulty;
     }
+
+    updateDifficultyFilterState();
+  }
+
+  function updateDifficultyFilterState() {
+    difficultyFilters.forEach((button) => {
+      const isPressed = button.classList.contains("active");
+      button.setAttribute("aria-pressed", isPressed ? "true" : "false");
+    });
   }
 
   // Function to set day filter
@@ -830,6 +839,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentDifficulty = button.dataset.difficulty;
       }
 
+      updateDifficultyFilterState();
       displayFilteredActivities();
     });
   });
