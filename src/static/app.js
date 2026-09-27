@@ -607,7 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
     const safeName = escapeHtml(name);
-    const safeDescription = escapeHtml(getPlainTextContent(details.description));
+    const safeDescription = escapeHtml(details.description);
     const safeSchedule = escapeHtml(formattedSchedule);
 
     // Create activity tag
@@ -668,13 +668,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <ul>
           ${details.participants
             .map(
-              (email) => `
+              (email, index) => `
             <li>
               ${escapeHtml(email)}
               ${
                 currentUser
                   ? `
-                <span class="delete-participant tooltip" data-activity="${safeName}" data-email="${escapeHtml(email)}">
+                <span class="delete-participant tooltip" data-participant-index="${index}">
                   ✖
                   <span class="tooltip-text">Unregister this student</span>
                 </span>
@@ -714,6 +714,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
     deleteButtons.forEach((button) => {
+      const participantIndex = Number(button.dataset.participantIndex);
+      button.dataset.activity = name;
+      button.dataset.email = details.participants[participantIndex];
       button.addEventListener("click", handleUnregister);
     });
 
