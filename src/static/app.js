@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let allActivities = {};
   let currentFilter = "all";
   let sharedActivityName = initialParams.get("activity") || "";
-  let searchQuery = sharedActivityName;
+  let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
   let hasFocusedSharedActivity = false;
@@ -56,10 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize filters from active elements
   function initializeFilters() {
-    if (sharedActivityName) {
-      searchInput.value = sharedActivityName;
-    }
-
     // Initialize day filter
     const activeDayFilter = document.querySelector(".day-filter.active");
     if (activeDayFilter) {
@@ -169,7 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     hasFocusedSharedActivity = true;
+    sharedCard.tabIndex = -1;
     sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    sharedCard.focus({ preventScroll: true });
   }
 
   // Function to set time range filter
