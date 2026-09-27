@@ -60,9 +60,35 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  function getStoredTheme() {
+    try {
+      return localStorage.getItem(themeStorageKey);
+    } catch (error) {
+      console.warn("Unable to read saved theme preference.", error);
+      return null;
+    }
+  }
+
+  function saveTheme(theme) {
+    try {
+      localStorage.setItem(themeStorageKey, theme);
+    } catch (error) {
+      console.warn("Unable to save theme preference.", error);
+    }
+  }
+
   function initializeTheme() {
-    const savedTheme = localStorage.getItem(themeStorageKey);
-    applyTheme(savedTheme === "dark" ? "dark" : "light");
+    const savedTheme = getStoredTheme();
+    if (savedTheme === "dark" || savedTheme === "light") {
+      applyTheme(savedTheme);
+      return;
+    }
+
+    const prefersDarkTheme =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    applyTheme(prefersDarkTheme ? "dark" : "light");
   }
 
   // Time range mappings for the dropdown
@@ -259,8 +285,8 @@ document.addEventListener("DOMContentLoaded", () => {
   themeToggle.addEventListener("click", () => {
     const nextTheme =
       document.body.dataset.theme === "dark" ? "light" : "dark";
-    localStorage.setItem(themeStorageKey, nextTheme);
     applyTheme(nextTheme);
+    saveTheme(nextTheme);
   });
   loginButton.addEventListener("click", openLoginModal);
   logoutButton.addEventListener("click", logout);
