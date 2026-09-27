@@ -22,9 +22,23 @@ def init_database():
 
     # Initialize missing default activities
     for name, details in initial_activities.items():
+        insert_details = {
+            key: value
+            for key, value in details.items()
+            if key != "difficulty_level"
+        }
+        update_operation = {"$setOnInsert": insert_details}
+
+        if "difficulty_level" in details:
+            update_operation["$set"] = {
+                "difficulty_level": details["difficulty_level"]
+            }
+        else:
+            update_operation["$unset"] = {"difficulty_level": ""}
+
         activities_collection.update_one(
             {"_id": name},
-            {"$setOnInsert": details},
+            update_operation,
             upsert=True
         )
             
@@ -54,6 +68,7 @@ initial_activities = {
             "start_time": "07:00",
             "end_time": "08:00"
         },
+        "difficulty_level": "Beginner",
         "max_participants": 20,
         "participants": ["emma@mergington.edu", "sophia@mergington.edu"]
     },
@@ -120,6 +135,7 @@ initial_activities = {
             "start_time": "07:15",
             "end_time": "08:00"
         },
+        "difficulty_level": "Intermediate",
         "max_participants": 10,
         "participants": ["james@mergington.edu", "benjamin@mergington.edu"]
     },
@@ -153,6 +169,7 @@ initial_activities = {
             "start_time": "10:00",
             "end_time": "14:00"
         },
+        "difficulty_level": "Advanced",
         "max_participants": 15,
         "participants": ["ethan@mergington.edu", "oliver@mergington.edu"]
     },

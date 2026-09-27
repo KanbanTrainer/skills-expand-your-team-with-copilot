@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const categoryFilters = document.querySelectorAll(".category-filter");
   const dayFilters = document.querySelectorAll(".day-filter");
   const timeFilters = document.querySelectorAll(".time-filter");
+  const difficultyFilters = document.querySelectorAll(".difficulty-filter");
 
   // Authentication elements
   const loginButton = document.getElementById("login-button");
@@ -46,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
+  let currentDifficulty = "";
   let hasFocusedSharedActivity = false;
 
   // Authentication state
@@ -123,6 +125,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeTimeFilter) {
       currentTimeRange = activeTimeFilter.dataset.time;
     }
+
+    const activeDifficultyFilter = document.querySelector(
+      ".difficulty-filter.active"
+    );
+    if (activeDifficultyFilter) {
+      currentDifficulty = activeDifficultyFilter.dataset.difficulty;
+    }
+
+    updateDifficultyFilterState();
+  }
+
+  function updateDifficultyFilterState() {
+    difficultyFilters.forEach((button) => {
+      const isPressed = button.classList.contains("active");
+      button.setAttribute("aria-pressed", isPressed ? "true" : "false");
+    });
   }
 
   // Function to set day filter
@@ -606,6 +624,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+      if (currentDifficulty === "all-levels") {
+        if (details.difficulty_level) {
+          return;
+        }
+      } else if (
+        currentDifficulty &&
+        details.difficulty_level &&
+        details.difficulty_level !== currentDifficulty
+      ) {
+        return;
+      }
+
       // Apply search filter
       const searchableContent = [
         name.toLowerCase(),
@@ -857,6 +887,24 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update current time filter and fetch activities
       currentTimeRange = button.dataset.time;
       fetchActivities();
+    });
+  });
+
+  difficultyFilters.forEach((button) => {
+    button.addEventListener("click", () => {
+      const isActive = button.classList.contains("active");
+
+      difficultyFilters.forEach((btn) => btn.classList.remove("active"));
+
+      if (isActive) {
+        currentDifficulty = "";
+      } else {
+        button.classList.add("active");
+        currentDifficulty = button.dataset.difficulty;
+      }
+
+      updateDifficultyFilterState();
+      displayFilteredActivities();
     });
   });
 
