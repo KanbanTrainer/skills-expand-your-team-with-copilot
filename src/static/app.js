@@ -99,8 +99,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return shareUrl.toString();
   }
 
+  function getPlainTextContent(text) {
+    const helper = document.createElement("div");
+    helper.innerHTML = text;
+    return helper.textContent?.trim() || "";
+  }
+
   function buildActivityShareText(name, details) {
-    return `Check out the ${name} activity at Mergington High School: ${details.description}`;
+    return `Check out the ${name} activity at Mergington High School: ${getPlainTextContent(details.description)}`;
   }
 
   async function copyTextToClipboard(text) {
@@ -153,8 +159,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const sharedCard = document.querySelector(
-      `.activity-card[data-activity-name="${normalizeActivityName(sharedActivityName)}"]`
+    const normalizedSharedActivityName = normalizeActivityName(sharedActivityName);
+    const sharedCard = Array.from(document.querySelectorAll(".activity-card")).find(
+      (card) => card.dataset.activityName === normalizedSharedActivityName
     );
 
     if (!sharedCard) {
@@ -612,7 +619,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `${buildActivityShareText(name, details)}\n\nLearn more: ${buildActivityShareUrl(name)}`
     );
     const shareActions = `
-      <div class="share-actions" aria-label="Share ${name}">
+      <div class="share-actions" role="group" aria-label="Share ${name}">
         ${
           navigator.share
             ? '<button type="button" class="share-button native-share-button">Share</button>'
