@@ -446,7 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      if (currentDifficulty === "All") {
+      if (currentDifficulty === "all-levels") {
         if (details.difficulty_level) {
           return;
         }
