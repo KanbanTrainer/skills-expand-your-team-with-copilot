@@ -452,6 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else if (
         currentDifficulty &&
+        details.difficulty_level &&
         details.difficulty_level !== currentDifficulty
       ) {
         return;

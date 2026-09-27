@@ -26,16 +26,25 @@ def init_database():
             activities_collection.insert_one({"_id": name, **details})
     else:
         for name, details in initial_activities.items():
+            insert_details = {
+                key: value
+                for key, value in details.items()
+                if key != "difficulty_level"
+            }
+            update_operation = {"$setOnInsert": insert_details}
+
             if "difficulty_level" in details:
-                activities_collection.update_one(
-                    {"_id": name},
-                    {"$set": {"difficulty_level": details["difficulty_level"]}}
-                )
+                update_operation["$set"] = {
+                    "difficulty_level": details["difficulty_level"]
+                }
             else:
-                activities_collection.update_one(
-                    {"_id": name},
-                    {"$unset": {"difficulty_level": ""}}
-                )
+                update_operation["$unset"] = {"difficulty_level": ""}
+
+            activities_collection.update_one(
+                {"_id": name},
+                update_operation,
+                upsert=True
+            )
             
     # Initialize teacher accounts if empty
     if teachers_collection.count_documents({}) == 0:
