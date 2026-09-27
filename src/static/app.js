@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const initialParams = new URLSearchParams(window.location.search);
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -38,10 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // State for activities and filters
   let allActivities = {};
   let currentFilter = "all";
+  let sharedActivityName = initialParams.get("activity") || "";
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
   let currentDifficulty = "";
+  let hasFocusedSharedActivity = false;
 
   // Authentication state
   let currentUser = null;
@@ -89,6 +92,108 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     fetchActivities();
+  }
+
+  function normalizeActivityName(name) {
+    return name.trim().toLowerCase();
+  }
+
+  function escapeHtml(text) {
+    return text
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function buildActivityShareUrl(name) {
+    const shareUrl = new URL(window.location.href);
+    shareUrl.searchParams.set("activity", name);
+    return shareUrl.toString();
+  }
+
+  function getPlainTextContent(text) {
+    const helper = document.createElement("div");
+    helper.innerHTML = text;
+    return helper.textContent?.trim() || "";
+  }
+
+  function buildActivityShareText(name, details) {
+    return `Check out the ${name} activity at Mergington High School: ${getPlainTextContent(details.description)}`;
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const helperTextArea = document.createElement("textarea");
+    helperTextArea.value = text;
+    helperTextArea.setAttribute("readonly", "");
+    helperTextArea.style.position = "absolute";
+    helperTextArea.style.left = "-9999px";
+    document.body.appendChild(helperTextArea);
+    helperTextArea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(helperTextArea);
+
+    if (!copied) {
+      throw new Error("Copy command was unsuccessful");
+    }
+  }
+
+  async function shareActivity(name, details) {
+    if (!navigator.share) {
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: `${name} | Mergington High School`,
+        text: buildActivityShareText(name, details),
+        url: buildActivityShareUrl(name),
+      });
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        showMessage("Sharing is not available right now. Please try again.", "error");
+      }
+    }
+  }
+
+  async function copyActivityLink(name) {
+    try {
+      await copyTextToClipboard(buildActivityShareUrl(name));
+      showMessage("Activity link copied.", "success");
+    } catch (error) {
+      console.error("Error copying activity link:", error);
+      showMessage("Couldn't copy the activity link. Please try again.", "error");
+    }
+  }
+
+  function focusSharedActivityCard() {
+    if (!sharedActivityName || hasFocusedSharedActivity) {
+      return;
+    }
+
+    const normalizedSharedActivityName = normalizeActivityName(sharedActivityName);
+    const sharedCard = Array.from(document.querySelectorAll(".activity-card")).find(
+      (card) => card.dataset.activityName === normalizedSharedActivityName
+    );
+
+    if (!sharedCard) {
+      return;
+    }
+
+    hasFocusedSharedActivity = true;
+    sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    const focusTarget = sharedCard.querySelector(
+      ".copy-share-button, .native-share-button, .share-link-button, .register-button"
+    );
+
+    focusTarget?.focus({ preventScroll: true });
   }
 
   // Function to set time range filter
@@ -491,12 +596,15 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    focusSharedActivityCard();
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    activityCard.dataset.activityName = normalizeActivityName(name);
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -519,6 +627,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const safeName = escapeHtml(name);
+    const safeDescription = escapeHtml(details.description);
+    const safeSchedule = escapeHtml(formattedSchedule);
 
     // Create activity tag
     const tagHtml = `
@@ -540,12 +651,36 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    const emailSubject = encodeURIComponent(
+      `Check out ${name} at Mergington High School`
+    );
+    const emailBody = encodeURIComponent(
+      `${buildActivityShareText(name, details)}\n\nLearn more: ${buildActivityShareUrl(name)}`
+    );
+    const shareActions = `
+      <div class="share-actions" role="group" aria-label="Share ${safeName}">
+        ${
+          navigator.share
+            ? `<button type="button" class="share-button native-share-button" aria-label="Share ${safeName} using your device">
+                Share
+              </button>`
+            : ""
+        }
+        <button type="button" class="share-button copy-share-button" aria-label="Copy a share link for ${safeName}">
+          Copy Link
+        </button>
+        <a class="share-button share-link-button" aria-label="Email ${safeName} to a friend" href="mailto:?subject=${emailSubject}&body=${emailBody}">
+          Email
+        </a>
+      </div>
+    `;
+
     activityCard.innerHTML = `
       ${tagHtml}
-      <h4>${name}</h4>
-      <p>${details.description}</p>
+      <h4>${safeName}</h4>
+      <p>${safeDescription}</p>
       <p class="tooltip">
-        <strong>Schedule:</strong> ${formattedSchedule}
+        <strong>Schedule:</strong> ${safeSchedule}
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
       </p>
       ${capacityIndicator}
@@ -554,13 +689,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <ul>
           ${details.participants
             .map(
-              (email) => `
+              (email, index) => `
             <li>
-              ${email}
+              ${escapeHtml(email)}
               ${
                 currentUser
                   ? `
-                <span class="delete-participant tooltip" data-activity="${name}" data-email="${email}">
+                <span class="delete-participant tooltip" data-participant-index="${index}">
                   ✖
                   <span class="tooltip-text">Unregister this student</span>
                 </span>
@@ -573,6 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      ${shareActions}
       <div class="activity-card-actions">
         ${
           currentUser
@@ -592,10 +728,29 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    if (normalizeActivityName(name) === normalizeActivityName(sharedActivityName)) {
+      activityCard.classList.add("shared-activity");
+    }
+
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
     deleteButtons.forEach((button) => {
+      const participantIndex = Number(button.dataset.participantIndex);
+      button.dataset.activity = name;
+      button.dataset.email = details.participants[participantIndex];
       button.addEventListener("click", handleUnregister);
+    });
+
+    const nativeShareButton = activityCard.querySelector(".native-share-button");
+    if (nativeShareButton) {
+      nativeShareButton.addEventListener("click", () => {
+        shareActivity(name, details);
+      });
+    }
+
+    const copyShareButton = activityCard.querySelector(".copy-share-button");
+    copyShareButton.addEventListener("click", () => {
+      copyActivityLink(name);
     });
 
     // Add click handler for register button (only when authenticated)

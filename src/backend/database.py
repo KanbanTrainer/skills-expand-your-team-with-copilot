@@ -20,31 +20,27 @@ def hash_password(password):
 def init_database():
     """Initialize database if empty"""
 
-    # Initialize activities if empty
-    if activities_collection.count_documents({}) == 0:
-        for name, details in initial_activities.items():
-            activities_collection.insert_one({"_id": name, **details})
-    else:
-        for name, details in initial_activities.items():
-            insert_details = {
-                key: value
-                for key, value in details.items()
-                if key != "difficulty_level"
+    # Initialize missing default activities
+    for name, details in initial_activities.items():
+        insert_details = {
+            key: value
+            for key, value in details.items()
+            if key != "difficulty_level"
+        }
+        update_operation = {"$setOnInsert": insert_details}
+
+        if "difficulty_level" in details:
+            update_operation["$set"] = {
+                "difficulty_level": details["difficulty_level"]
             }
-            update_operation = {"$setOnInsert": insert_details}
+        else:
+            update_operation["$unset"] = {"difficulty_level": ""}
 
-            if "difficulty_level" in details:
-                update_operation["$set"] = {
-                    "difficulty_level": details["difficulty_level"]
-                }
-            else:
-                update_operation["$unset"] = {"difficulty_level": ""}
-
-            activities_collection.update_one(
-                {"_id": name},
-                update_operation,
-                upsert=True
-            )
+        activities_collection.update_one(
+            {"_id": name},
+            update_operation,
+            upsert=True
+        )
             
     # Initialize teacher accounts if empty
     if teachers_collection.count_documents({}) == 0:
@@ -142,6 +138,17 @@ initial_activities = {
         "difficulty_level": "Intermediate",
         "max_participants": 10,
         "participants": ["james@mergington.edu", "benjamin@mergington.edu"]
+    },
+    "Manga Maniacs": {
+        "description": "Dive into the action-packed worlds, unforgettable heroes, and bold storytelling of Japanese manga (graphic novels).",
+        "schedule": "Tuesdays, 5:00 PM - 6:00 PM",
+        "schedule_details": {
+            "days": ["Tuesday"],
+            "start_time": "17:00",
+            "end_time": "18:00"
+        },
+        "max_participants": 25,
+        "participants": []
     },
     "Debate Team": {
         "description": "Develop public speaking and argumentation skills",
