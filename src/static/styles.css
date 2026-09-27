@@ -32,6 +32,19 @@
   --info-light: #d1ecf1;
 }
 
+body[data-theme="dark"] {
+  --primary: #5c6bc0;
+  --primary-light: #7986cb;
+  --primary-dark: #3f51b5;
+  --background: #111827;
+  --surface: #1f2937;
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --border: #374151;
+  --border-light: #4b5563;
+  --border-focus: #6b7280;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -48,6 +61,20 @@ body {
   padding: 12px;
   background-color: var(--background);
   font-size: 0.9rem;
+}
+
+body,
+section,
+.sidebar-filters,
+.activity-card,
+.skeleton-card,
+.modal-content,
+input,
+button {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 header {
@@ -531,6 +558,8 @@ footer {
   border-radius: 20px 0 0 20px;
   font-size: 0.85rem;
   transition: all 0.3s ease;
+  background-color: var(--surface);
+  color: var(--text-primary);
 }
 
 .search-box input:focus {
@@ -649,6 +678,13 @@ footer {
   .sidebar-filters {
     width: 100%;
   }
+
+  #user-controls {
+    position: static;
+    margin-top: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 }
 
 /* User controls in header */
@@ -656,6 +692,9 @@ footer {
   position: absolute;
   top: 10px;
   right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #user-status {
@@ -689,6 +728,10 @@ footer {
   background-color: rgba(255, 255, 255, 0.3);
 }
 
+#theme-toggle {
+  white-space: nowrap;
+}
+
 .user-icon {
   font-size: 1rem;
 }
@@ -702,4 +745,20 @@ footer {
 
 #logout-button:hover {
   background-color: rgba(255, 255, 255, 0.3);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background-color: var(--surface);
+  color: var(--text-primary);
+}
+
+#signup-form label,
+#login-form label {
+  color: var(--text-primary);
 }
