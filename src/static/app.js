@@ -89,8 +89,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return name.trim().toLowerCase();
   }
 
+  function escapeHtml(text) {
+    return text
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
   function buildActivityShareUrl(name) {
-    const shareUrl = new URL(window.location.pathname, window.location.origin);
+    const shareUrl = new URL(window.location.href);
     shareUrl.searchParams.set("activity", name);
     return shareUrl.toString();
   }
@@ -597,6 +606,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const safeName = escapeHtml(name);
+    const safeDescription = escapeHtml(getPlainTextContent(details.description));
+    const safeSchedule = escapeHtml(formattedSchedule);
 
     // Create activity tag
     const tagHtml = `
@@ -625,18 +637,18 @@ document.addEventListener("DOMContentLoaded", () => {
       `${buildActivityShareText(name, details)}\n\nLearn more: ${buildActivityShareUrl(name)}`
     );
     const shareActions = `
-      <div class="share-actions" role="group" aria-label="Share ${name}">
+      <div class="share-actions" role="group" aria-label="Share ${safeName}">
         ${
           navigator.share
-            ? `<button type="button" class="share-button native-share-button" aria-label="Share ${name} using your device">
+            ? `<button type="button" class="share-button native-share-button" aria-label="Share ${safeName} using your device">
                 Share
               </button>`
             : ""
         }
-        <button type="button" class="share-button copy-share-button" aria-label="Copy a share link for ${name}">
+        <button type="button" class="share-button copy-share-button" aria-label="Copy a share link for ${safeName}">
           Copy Link
         </button>
-        <a class="share-button share-link-button" aria-label="Email ${name} to a friend" href="mailto:?subject=${emailSubject}&body=${emailBody}">
+        <a class="share-button share-link-button" aria-label="Email ${safeName} to a friend" href="mailto:?subject=${emailSubject}&body=${emailBody}">
           Email
         </a>
       </div>
@@ -644,10 +656,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     activityCard.innerHTML = `
       ${tagHtml}
-      <h4>${name}</h4>
-      <p>${details.description}</p>
+      <h4>${safeName}</h4>
+      <p>${safeDescription}</p>
       <p class="tooltip">
-        <strong>Schedule:</strong> ${formattedSchedule}
+        <strong>Schedule:</strong> ${safeSchedule}
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
       </p>
       ${capacityIndicator}
@@ -658,11 +670,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(
               (email) => `
             <li>
-              ${email}
+              ${escapeHtml(email)}
               ${
                 currentUser
                   ? `
-                <span class="delete-participant tooltip" data-activity="${name}" data-email="${email}">
+                <span class="delete-participant tooltip" data-activity="${safeName}" data-email="${escapeHtml(email)}">
                   ✖
                   <span class="tooltip-text">Unregister this student</span>
                 </span>
